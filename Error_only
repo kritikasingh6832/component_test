@@ -17,6 +17,7 @@ const AdvancedFiltering = () => {
                 </Form.Item>
             </div>
             <div>
+                <Text style={{ color: colorblue1, marginBottom: "0" }} className="ant-form-item-label">Advanced Filtering</Text>
                 <Form.Item name='criticalOnly' initialValue={false} valuePropName={'checked'} style={{ marginBottom: '-5px' }}>
                     <Checkbox>Critical Only</Checkbox>
                 </Form.Item>
@@ -28,4 +29,4 @@ const AdvancedFiltering = () => {
     );
 }
 
-export default AdvancedFiltering;
+export default AdvancedFiltering;  
