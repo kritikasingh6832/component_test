@@ -1,0 +1,31 @@
+import React from "react";
+import { Form, Checkbox, Typography } from "antd";
+import { colorblue1 } from "../../../optumcolors";
+
+const { Text } = Typography;
+
+const AdvancedFiltering = () => {
+    return (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gridColumnGap: "10px" }}>
+            <div>
+                <Text style={{ color: colorblue1, marginBottom: "0" }} className="ant-form-item-label">Advanced Filtering</Text>
+                <Form.Item name='includeWarnings' initialValue={false} valuePropName={'checked'} style={{ marginBottom: '-5px' }}>
+                    <Checkbox>Errors Only</Checkbox>
+                </Form.Item>
+                <Form.Item name='warningsOnly' initialValue={false} valuePropName={'checked'} style={{ marginBottom: '-5px' }}>
+                    <Checkbox>Warnings Only</Checkbox>
+                </Form.Item>
+            </div>
+            <div>
+                <Form.Item name='criticalOnly' initialValue={false} valuePropName={'checked'} style={{ marginBottom: '-5px' }}>
+                    <Checkbox>Critical Only</Checkbox>
+                </Form.Item>
+                <Form.Item name='includeNonActionable' initialValue={false} valuePropName={'checked'} style={{ marginBottom: '-5px' }}>
+                    <Checkbox>Include Non-Actionable</Checkbox>
+                </Form.Item>
+            </div>
+        </div>
+    );
+}
+
+export default AdvancedFiltering;
