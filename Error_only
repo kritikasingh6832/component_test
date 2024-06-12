@@ -251,3 +251,691 @@ const SearchOptions = () => {
 }
 
 export default SearchOptions;
+
+
+
+ChatGPT
+
+Uploaded image
+import React, {useEffect, useState} from 'react'
+import {Button, Card, Col, Form, Row, Space, Tooltip} from "antd";
+import {colorgray7} from "../../optumcolors";
+import MemberGroupID from "./Components/MemberGroupID";
+import MessageStatus from "./Components/MessageStatus";
+import MessagePriority from "./Components/MessagePriority";
+import MessageCode from "./Components/MessageCode";
+import Category from "./Components/Category";
+import EnrollmentSource from "./Components/EnrollmentSource";
+import MemberID from "./Components/MemberID";
+import TransactionID from "./Components/TransactionID";
+import TransactionCategory from "./Components/TransactionCategory";
+import DateRange from "./Components/DateRange";
+import FileName from "./Components/FileName";
+import AdvancedFiltering from "./Components/AdvancedFiltering";
+import MemberFirstName from "./Components/MemberFirstName";
+import MemberLastName from "./Components/MemberLastName";
+import {
+    DEFAULT_FORM_GUTTER_X,
+    DEFAULT_FORM_GUTTER_Y,
+    ENROLLMENT_FILE_MESSAGE_CATEGORY_LIST,
+    GET_MEMBERS,
+    MESSAGE_PRIORITY,
+    MESSAGE_STATUS,
+    RESET,
+    SERVICE_DATE_QUERY_FORMAT
+} from "../../constants";
+import moment from "moment";
+import {useAppDispatch} from "../../hooks";
+import {retrieveErrorRecords} from "./actions";
+import {SorterResult} from 'antd/lib/table/interface';
+import {RootState} from '../../store';
+import BookOfBusinessType from "./Components/BookOfBusinessType";
+import RevenueArrangement from "./Components/RevenueArrangement";
+import MemberTransactionType from "./Components/MemberTransactionType";
+import {useSelector} from "react-redux";
+import GenerateCsvPopup from "../Results/components/Popups/GenerateCsvPopup";
+
+const SearchOptions = () => {
+    const [form] = Form.useForm();
+    const dispatch = useAppDispatch();
+    const initialValues = {
+        dateRange: [
+            moment().subtract(7, 'day'),
+            moment()
+        ],
+        messageStatus: [
+            MESSAGE_STATUS.OPEN.value,
+            MESSAGE_STATUS.IN_PROGRESS.value
+        ]
+    };
+    const [searchButtonDisabled, setSearchButtonDisabled] = useState<boolean>(false);
+    const [generateButtonDisabled, setGenerateButtonDisabled] = useState<boolean>(false);
+    const [generateButtonTooltip, setGenerateButtonTooltip] = useState<string>("");
+    const [searchButtonTooltip, setSearchButtonTooltip] = useState<string>("");
+    const [messagePriorityDisabled, setMessagePriorityDisabled] = useState<boolean>(false);
+    const [memberGroupName, setMemberGroupName] = useState<string>("");
+    const [sortList, setSortList] = useState<SorterResult<any>[]>([]);
+    const currentPage = useSelector((state: RootState) => state.pageSearch.page);
+    const pageSize = useSelector((state: RootState) => state.pageSearch.pageSize);
+
+    const validateForm = () => {
+        let fieldsValue = form.getFieldsValue();
+        if (
+            !fieldsValue.dateRange ||
+            ((!fieldsValue.category || fieldsValue.category?.length === 0) &&
+                !fieldsValue.memberID &&
+                !fieldsValue.memGroupID)
+        ) {
+            setSearchButtonDisabled(true);
+            setSearchButtonTooltip(
+                "Date Range and at least one of the following are required: Category, Member Group ID, or Member ID"
+            );
+            setGenerateButtonDisabled(true); // Disable Generate Report button
+            setGenerateButtonTooltip(""); // Clear Generate Report button tooltip
+        } else if (form.getFieldsError().some((item) => item.errors.length > 0)) {
+            setSearchButtonDisabled(true);
+            setSearchButtonTooltip("Fix search form errors");
+            setGenerateButtonDisabled(true); // Disable Generate Report button
+            setGenerateButtonTooltip(""); // Clear Generate Report button tooltip
+        } else {
+            setSearchButtonDisabled(false);
+            setSearchButtonTooltip("");
+            GenerateReportValidation(); // Enable Generate Report button
+        }
+    };
+
+    useEffect(() => {
+        validateForm();
+    }, [form.validateFields]);
+
+    const GenerateReportValidation = () => {
+        let fieldsValue = form.getFieldsValue();
+        if (
+            !fieldsValue.dateRange ||
+            ((!fieldsValue.category || fieldsValue.category?.length === 0) &&
+                !fieldsValue.memberID &&
+                !fieldsValue.memGroupID)
+        ) {
+            setGenerateButtonDisabled(true);
+            setGenerateButtonTooltip(
+                "Date Range and at least one of the following are required: Category, Member Group ID, or Member ID"
+            );
+        } else if (form.getFieldsError().some((item) => item.errors.length > 0)) {
+            setGenerateButtonDisabled(true);
+            setGenerateButtonTooltip("Fix search form errors");
+        } else {
+            setGenerateButtonDisabled(false);
+            setGenerateButtonTooltip("");
+        }
+    };
+
+    useEffect(() => {
+        GenerateReportValidation();
+    }, [form.validateFields, searchButtonDisabled]);
+
+    const onValuesChanged = (changedValues: any) => {
+        if (changedValues.criticalOnly) {
+            setMessagePriorityDisabled(true);
+            form.setFieldsValue({messagePriority: MESSAGE_PRIORITY.HIGH.value});
+        }
+        else if (changedValues.criticalOnly === false) {
+            setMessagePriorityDisabled(false);
+            form.setFieldsValue({messagePriority: null});
+        }
+        validateForm();
+    }
+
+    const onFinish = (values: any) => {
+        const errorSearchOptions = {...values};
+        if (errorSearchOptions.dateRange) {
+            errorSearchOptions.fromDate = moment(errorSearchOptions.dateRange[0]).format(SERVICE_DATE_QUERY_FORMAT);
+            errorSearchOptions.toDate = moment(errorSearchOptions.dateRange[1]).format(SERVICE_DATE_QUERY_FORMAT);
+        }
+        delete (errorSearchOptions.dateRange);
+        console.log(JSON.stringify(errorSearchOptions));
+        retrieveErrorRecords(errorSearchOptions, currentPage, pageSize, sortList, dispatch);
+    };
+
+    const onFinishFailed = (errorInfo?: any) => {
+        console.log(errorInfo);
+    };
+
+    const [showGenerateCsv, setShowGenerateCsv] = useState<boolean>(false);
+    const onGenerateCsvClicked = () => {
+        setShowGenerateCsv(true);
+    }
+
+    return (
+        <Form layout='vertical' form={form} name="search-options" onFinish={onFinish} onFinishFailed={onFinishFailed}
+              onFieldsChange={validateForm} onValuesChange={onValuesChanged} initialValues={initialValues}>
+            <Card bodyStyle={{backgroundColor: colorgray7}}>
+                <Row gutter={[DEFAULT_FORM_GUTTER_X, DEFAULT_FORM_GUTTER_Y]}>
+                    <Col span={6} className={"category"}>
+                           <div style={{ marginBottom: '8px' }}> <Category/></div>
+                        <text className={"asterisk"}> *</text>
+                        <text className={"text"} style={{ fontSize: '12pt' }}>Choose One or More</text>
+                    </Col>
+                    <Col span={6} className={"memberGroupID"}>
+                     <div style={{ marginBottom: '7px'}}>
+                        <MemberGroupID setFieldsValue={form.setFieldsValue}
+                                       setMemberGroupName={setMemberGroupName}
+                                       memberGroupName={memberGroupName}
+                                       getFieldsValue={form.getFieldsValue}
+                        />
+                        </div>
+                    </Col>
+                    <Col span={6} className={"memberID"}>
+                      <div style={{ marginBottom: '8px' }}>
+                             <MemberID setFieldsValue={form.setFieldsValue} validateForm={validateForm} />
+                        </div>
+                    </Col>
+                    <Col span={6} className={"TransactionID"}>
+                        <div>
+                            <TransactionID setFieldsValue={form.setFieldsValue} validateForm={validateForm} />
+                        </div>
+                    </Col>
+                </Row>
+                <Row gutter={[DEFAULT_FORM_GUTTER_X, DEFAULT_FORM_GUTTER_Y]}>
+                    <Col span={6}>
+                        <div style={{ marginBottom: '8px' }}>
+                            <DateRange/>
+                        </div>
+                    </Col>
+                    <Col span={6}>
+                        <TransactionCategory/>
+                    </Col>
+                    <Col span={6}>
+                        <MemberFirstName/>
+                    </Col>
+                    <Col span={6}>
+                        <MemberLastName/>
+                    </Col>
+                </Row>
+                <Row gutter={[DEFAULT_FORM_GUTTER_X, DEFAULT_FORM_GUTTER_Y]}>
+                    <Col span={6}>
+                        <MessageCode setFieldsValue={form.setFieldsValue} />
+                    </Col>
+                    <Col span={6}>
+                        <MessageStatus/>
+                    </Col>
+                    <Col span={6}>
+                        <FileName/>
+                    </Col>
+                    <Col span={6}>
+                        <MessagePriority disabled={messagePriorityDisabled}/>
+                    </Col>
+                </Row>
+                <Row gutter={[DEFAULT_FORM_GUTTER_X, DEFAULT_FORM_GUTTER_Y]}>
+                    <Col span={6}>
+                        <MemberTransactionType/>
+                    </Col>
+                    <Col span={6}>
+                        <BookOfBusinessType/>
+                    </Col>
+                    <Col span={6}>
+                        <RevenueArrangement/>
+                    </Col>
+                    <Col span={6} >
+                        <AdvancedFiltering/>
+                    </Col>
+                </Row>
+                <Col span={24}>
+                    <Space size={8}>
+                        <Tooltip placement='top' title={searchButtonTooltip}>
+                            <Button type='primary' htmlType='submit' disabled={searchButtonDisabled}>
+                                Search
+                            </Button>
+                        </Tooltip>
+                        <Space size={16}>
+                        <Button onClick={() => {
+                            form.resetFields();
+                            setMemberGroupName("");
+                            validateForm();
+                            dispatch({type: GET_MEMBERS, subtype: RESET});
+                        }}>Clear</Button>
+                        <GenerateCsvPopup isVisible={showGenerateCsv}
+                                          setVisible={setShowGenerateCsv}
+                        />
+                            <Tooltip placement='top' title={generateButtonTooltip}>
+                                <Button onClick={onGenerateCsvClicked} disabled={generateButtonDisabled}>Generate Report</Button>
+                            </Tooltip>
+                            </Space>
+                    </Space>
+                    <Form.Item>
+                    </Form.Item>
+                </Col>
+            </Card>
+        </Form>
+    );
+}
+
+export default SearchOptions;
+I want Transaction ID to be inside Choose one or More
+ChatGPT
+To move the "Transaction ID" field into the "Choose One or More" category, you'll need to adjust the JSX and relevant logic in your SearchOptions component. Here’s how you can do it:
+
+Adjust the JSX layout to include TransactionID in the same column as Category.
+
+Update the validation logic to consider TransactionID as part of the required fields when validating the form.
+
+Here’s a modified version of your SearchOptions component:
+
+jsx
+Copy code
+import React, { useEffect, useState } from 'react';
+import { Button, Card, Col, Form, Row, Space, Tooltip } from "antd";
+import { colorgray7 } from "../../optumcolors";
+import MemberGroupID from "./Components/MemberGroupID";
+import MessageStatus from "./Components/MessageStatus";
+import MessagePriority from "./Components/MessagePriority";
+import MessageCode from "./Components/MessageCode";
+import Category from "./Components/Category";
+import EnrollmentSource from "./Components/EnrollmentSource";
+import MemberID from "./Components/MemberID";
+import TransactionID from "./Components/TransactionID";
+import TransactionCategory from "./Components/TransactionCategory";
+import DateRange from "./Components/DateRange";
+import FileName from "./Components/FileName";
+import AdvancedFiltering from "./Components/AdvancedFiltering";
+import MemberFirstName from "./Components/MemberFirstName";
+import MemberLastName from "./Components/MemberLastName";
+import {
+    DEFAULT_FORM_GUTTER_X,
+    DEFAULT_FORM_GUTTER_Y,
+    ENROLLMENT_FILE_MESSAGE_CATEGORY_LIST,
+    GET_MEMBERS,
+    MESSAGE_PRIORITY,
+    MESSAGE_STATUS,
+    RESET,
+    SERVICE_DATE_QUERY_FORMAT
+} from "../../constants";
+import moment from "moment";
+import { useAppDispatch } from "../../hooks";
+import { retrieveErrorRecords } from "./actions";
+import { SorterResult } from 'antd/lib/table/interface';
+import { RootState } from '../../store';
+import BookOfBusinessType from "./Components/BookOfBusinessType";
+import RevenueArrangement from "./Components/RevenueArrangement";
+import MemberTransactionType from "./Components/MemberTransactionType";
+import { useSelector } from "react-redux";
+import GenerateCsvPopup from "../Results/components/Popups/GenerateCsvPopup";
+
+const SearchOptions = () => {
+    const [form] = Form.useForm();
+    const dispatch = useAppDispatch();
+    const initialValues = {
+        dateRange: [
+            moment().subtract(7, 'day'),
+            moment()
+        ],
+        messageStatus: [
+            MESSAGE_STATUS.OPEN.value,
+            MESSAGE_STATUS.IN_PROGRESS.value
+        ]
+    };
+    const [searchButtonDisabled, setSearchButtonDisabled] = useState<boolean>(false);
+    const [generateButtonDisabled, setGenerateButtonDisabled] = useState<boolean>(false);
+    const [generateButtonTooltip, setGenerateButtonTooltip] = useState<string>("");
+    const [searchButtonTooltip, setSearchButtonTooltip] = useState<string>("");
+    const [messagePriorityDisabled, setMessagePriorityDisabled] = useState<boolean>(false);
+    const [memberGroupName, setMemberGroupName] = useState<string>("");
+    const [sortList, setSortList] = useState<SorterResult<any>[]>([]);
+    const currentPage = useSelector((state: RootState) => state.pageSearch.page);
+    const pageSize = useSelector((state: RootState) => state.pageSearch.pageSize);
+
+    const validateForm = () => {
+        let fieldsValue = form.getFieldsValue();
+        if (
+            !fieldsValue.dateRange ||
+            ((!fieldsValue.category || fieldsValue.category?.length === 0) &&
+                !fieldsValue.memberID &&
+                !fieldsValue.memGroupID &&
+                !fieldsValue.transactionID)
+        ) {
+            setSearchButtonDisabled(true);
+            setSearchButtonTooltip(
+                "Date Range and at least one of the following are required: Category, Member Group ID, Member ID, or Transaction ID"
+            );
+            setGenerateButtonDisabled(true); // Disable Generate Report button
+            setGenerateButtonTooltip(""); // Clear Generate Report button tooltip
+        } else if (form.getFieldsError().some((item) => item.errors.length > 0)) {
+            setSearchButtonDisabled(true);
+            setSearchButtonTooltip("Fix search form errors");
+            setGenerateButtonDisabled(true); // Disable Generate Report button
+            setGenerateButtonTooltip(""); // Clear Generate Report button tooltip
+        } else {
+            setSearchButtonDisabled(false);
+            setSearchButtonTooltip("");
+            GenerateReportValidation(); // Enable Generate Report button
+        }
+    };
+
+    useEffect(() => {
+        validateForm();
+    }, [form.validateFields]);
+
+    const GenerateReportValidation = () => {
+        let fieldsValue = form.getFieldsValue();
+        if (
+            !fieldsValue.dateRange ||
+            ((!fieldsValue.category || fieldsValue.category?.length === 0) &&
+                !fieldsValue.memberID &&
+                !fieldsValue.memGroupID &&
+                !fieldsValue.transactionID)
+        ) {
+            setGenerateButtonDisabled(true);
+            setGenerateButtonTooltip(
+                "Date Range and at least one of the following are required: Category, Member Group ID, Member ID, or Transaction ID"
+            );
+        } else if (form.getFieldsError().some((item) => item.errors.length > 0)) {
+            setGenerateButtonDisabled(true);
+            setGenerateButtonTooltip("Fix search form errors");
+        } else {
+            setGenerateButtonDisabled(false);
+            setGenerateButtonTooltip("");
+        }
+    };
+
+    useEffect(() => {
+        GenerateReportValidation();
+    }, [form.validateFields, searchButtonDisabled]);
+
+    const onValuesChanged = (changedValues: any) => {
+        if (changedValues.criticalOnly) {
+            setMessagePriorityDisabled(true);
+            form.setFieldsValue({messagePriority: MESSAGE_PRIORITY.HIGH.value});
+        }
+        else if (changedValues.criticalOnly === false) {
+            setMessagePriorityDisabled(false);
+            form.setFieldsValue({messagePriority: null});
+        }
+        validateForm();
+    }
+
+    const onFinish = (values: any) => {
+        const errorSearchOptions = { ...values };
+        if (errorSearchOptions.dateRange) {
+            errorSearchOptions.fromDate = moment(errorSearchOptions.dateRange[0]).format(SERVICE_DATE_QUERY_FORMAT);
+            errorSearchOptions.toDate = moment(errorSearchOptions.dateRange[1]).format(SERVICE_DATE_QUERY_FORMAT);
+        }
+        delete (errorSearchOptions.dateRange);
+        console.log(JSON.stringify(errorSearchOptions));
+        retrieveErrorRecords(errorSearchOptions, currentPage, pageSize, sortList, dispatch);
+    };
+
+    const onFinishFailed = (errorInfo?: any) => {
+        console.log(errorInfo);
+    };
+
+    const [showGenerateCsv, setShowGenerateCsv] = useState<boolean>(false);
+    const onGenerateCsvClicked = () => {
+        setShowGenerateCsv(true);
+    }
+
+    return (
+        <Form layout='vertical' form={form} name="search-options" onFinish={onFinish} onFinishFailed={onFinishFailed}
+              onFieldsChange={validateForm} onValuesChange={onValuesChanged} initialValues={initialValues}>
+            <Card bodyStyle={{ backgroundColor: colorgray7 }}>
+                <Row gutter={[DEFAULT_FORM_GUTTER_X, DEFAULT_FORM_GUTTER_Y]}>
+                    <Col span={6} className={"category"}>
+                        <div style={{ marginBottom: '8px' }}>
+                            <Category />
+                        </div>
+                        <text className={"asterisk"}> *</text>
+                        <text className={"text"} style={{ fontSize: '12pt' }}>Choose One or More</text>
+                        <div style={{ marginBottom: '8px' }}>
+                            <TransactionID setFieldsValue={form.setFieldsValue} validateForm={validateForm} />
+                        </div>
+                    </Col>
+                    <Col span={6} className={"memberGroupID"}>
+                        <div style={{ marginBottom: '7px' }}>
+                            <MemberGroupID setFieldsValue={form.setFieldsValue}
+                                setMemberGroupName={setMemberGroupName}
+                                memberGroupName={memberGroupName}
+                                getFieldsValue={form.getFieldsValue}
+                            />
+                        </div>
+                    </Col>
+                    <Col span={6} className={"memberID"}>
+                        <div style={{ marginBottom: '8px' }}>
+                            <MemberID setFieldsValue={form.setFieldsValue} validateForm={validateForm} />
+                        </div>
+                    </Col>
+                </Row>
+                <Row gutter={[DEFAULT_FORM_GUTTER_X, DEFAULT_FORM_GUTTER_Y]}>
+                    <Col span={6}>
+                        <div style={{ marginBottom: '8px' }}>
+                            <DateRange />
+                        </div>
+                    </Col>
+                    <Col span={6}>
+                        <TransactionCategory />
+                    </Col>
+                    <Col span={6}>
+                        <MemberFirstName />
+                    </Col>
+                    <Col span={6}>
+                        <MemberLastName />
+                    </Col>
+                </Row>
+                <Row gutter={[DEFAULT_FORM_GUTTER_X, DEFAULT_FORM_GUTTER_Y]}>
+                    <Col span={6}>
+                        <MessageCode setFieldsValue={form.setFieldsValue} />
+                    </Col>
+                    <Col span={6}>
+                        <MessageStatus />
+                    </Col>
+                    <Col span={6}>
+                        <FileName />
+                    </Col>
+                    <Col span={6}>
+                        <MessagePriority disabled={messagePriorityDisabled} />
+                    </Col>
+                </Row>
+                <Row gutter={[DEFAULT_FORM_GUTTER_X, DEFAULT_FORM_GUTTER_Y]}>
+                    <Col span={6}>
+                        <MemberTransactionType />
+                    </Col>
+                    <Col span={6}>
+                        <BookOfBusinessType />
+                    </Col>
+                    <Col span={6}>
+                        <RevenueArrangement />
+                    </Col>
+                    <Col span={6}>
+                        <AdvancedFiltering />
+                    </
+
+
+
+
+But why you moved transaction ID on top
+ChatGPT
+To move the "Transaction ID" field into the "Choose One or More" category without changing the layout structure significantly, we need to keep it visually aligned with the other fields in that category but within the same column. Here’s the corrected version of the SearchOptions component:
+
+Keep the "Transaction ID" in the same column as "Category", "Member Group ID", and "Member ID".
+
+Update the form validation to include "Transaction ID" as part of the required fields.
+
+Here’s the updated code:
+
+jsx
+Copy code
+import React, { useEffect, useState } from 'react';
+import { Button, Card, Col, Form, Row, Space, Tooltip } from "antd";
+import { colorgray7 } from "../../optumcolors";
+import MemberGroupID from "./Components/MemberGroupID";
+import MessageStatus from "./Components/MessageStatus";
+import MessagePriority from "./Components/MessagePriority";
+import MessageCode from "./Components/MessageCode";
+import Category from "./Components/Category";
+import MemberID from "./Components/MemberID";
+import TransactionID from "./Components/TransactionID";
+import TransactionCategory from "./Components/TransactionCategory";
+import DateRange from "./Components/DateRange";
+import FileName from "./Components/FileName";
+import AdvancedFiltering from "./Components/AdvancedFiltering";
+import MemberFirstName from "./Components/MemberFirstName";
+import MemberLastName from "./Components/MemberLastName";
+import {
+    DEFAULT_FORM_GUTTER_X,
+    DEFAULT_FORM_GUTTER_Y,
+    MESSAGE_PRIORITY,
+    MESSAGE_STATUS,
+    RESET,
+    SERVICE_DATE_QUERY_FORMAT
+} from "../../constants";
+import moment from "moment";
+import { useAppDispatch } from "../../hooks";
+import { retrieveErrorRecords } from "./actions";
+import { SorterResult } from 'antd/lib/table/interface';
+import { RootState } from '../../store';
+import BookOfBusinessType from "./Components/BookOfBusinessType";
+import RevenueArrangement from "./Components/RevenueArrangement";
+import MemberTransactionType from "./Components/MemberTransactionType";
+import { useSelector } from "react-redux";
+import GenerateCsvPopup from "../Results/components/Popups/GenerateCsvPopup";
+
+const SearchOptions = () => {
+    const [form] = Form.useForm();
+    const dispatch = useAppDispatch();
+    const initialValues = {
+        dateRange: [
+            moment().subtract(7, 'day'),
+            moment()
+        ],
+        messageStatus: [
+            MESSAGE_STATUS.OPEN.value,
+            MESSAGE_STATUS.IN_PROGRESS.value
+        ]
+    };
+    const [searchButtonDisabled, setSearchButtonDisabled] = useState<boolean>(false);
+    const [generateButtonDisabled, setGenerateButtonDisabled] = useState<boolean>(false);
+    const [generateButtonTooltip, setGenerateButtonTooltip] = useState<string>("");
+    const [searchButtonTooltip, setSearchButtonTooltip] = useState<string>("");
+    const [messagePriorityDisabled, setMessagePriorityDisabled] = useState<boolean>(false);
+    const [memberGroupName, setMemberGroupName] = useState<string>("");
+    const [sortList, setSortList] = useState<SorterResult<any>[]>([]);
+    const currentPage = useSelector((state: RootState) => state.pageSearch.page);
+    const pageSize = useSelector((state: RootState) => state.pageSearch.pageSize);
+
+    const validateForm = () => {
+        let fieldsValue = form.getFieldsValue();
+        if (
+            !fieldsValue.dateRange ||
+            ((!fieldsValue.category || fieldsValue.category?.length === 0) &&
+                !fieldsValue.memberID &&
+                !fieldsValue.memGroupID &&
+                !fieldsValue.transactionID)
+        ) {
+            setSearchButtonDisabled(true);
+            setSearchButtonTooltip(
+                "Date Range and at least one of the following are required: Category, Member Group ID, Member ID, or Transaction ID"
+            );
+            setGenerateButtonDisabled(true); // Disable Generate Report button
+            setGenerateButtonTooltip(""); // Clear Generate Report button tooltip
+        } else if (form.getFieldsError().some((item) => item.errors.length > 0)) {
+            setSearchButtonDisabled(true);
+            setSearchButtonTooltip("Fix search form errors");
+            setGenerateButtonDisabled(true); // Disable Generate Report button
+            setGenerateButtonTooltip(""); // Clear Generate Report button tooltip
+        } else {
+            setSearchButtonDisabled(false);
+            setSearchButtonTooltip("");
+            GenerateReportValidation(); // Enable Generate Report button
+        }
+    };
+
+    useEffect(() => {
+        validateForm();
+    }, [form.validateFields]);
+
+    const GenerateReportValidation = () => {
+        let fieldsValue = form.getFieldsValue();
+        if (
+            !fieldsValue.dateRange ||
+            ((!fieldsValue.category || fieldsValue.category?.length === 0) &&
+                !fieldsValue.memberID &&
+                !fieldsValue.memGroupID &&
+                !fieldsValue.transactionID)
+        ) {
+            setGenerateButtonDisabled(true);
+            setGenerateButtonTooltip(
+                "Date Range and at least one of the following are required: Category, Member Group ID, Member ID, or Transaction ID"
+            );
+        } else if (form.getFieldsError().some((item) => item.errors.length > 0)) {
+            setGenerateButtonDisabled(true);
+            setGenerateButtonTooltip("Fix search form errors");
+        } else {
+            setGenerateButtonDisabled(false);
+            setGenerateButtonTooltip("");
+        }
+    };
+
+    useEffect(() => {
+        GenerateReportValidation();
+    }, [form.validateFields, searchButtonDisabled]);
+
+    const onValuesChanged = (changedValues: any) => {
+        if (changedValues.criticalOnly) {
+            setMessagePriorityDisabled(true);
+            form.setFieldsValue({ messagePriority: MESSAGE_PRIORITY.HIGH.value });
+        }
+        else if (changedValues.criticalOnly === false) {
+            setMessagePriorityDisabled(false);
+            form.setFieldsValue({ messagePriority: null });
+        }
+        validateForm();
+    }
+
+    const onFinish = (values: any) => {
+        const errorSearchOptions = { ...values };
+        if (errorSearchOptions.dateRange) {
+            errorSearchOptions.fromDate = moment(errorSearchOptions.dateRange[0]).format(SERVICE_DATE_QUERY_FORMAT);
+            errorSearchOptions.toDate = moment(errorSearchOptions.dateRange[1]).format(SERVICE_DATE_QUERY_FORMAT);
+        }
+        delete (errorSearchOptions.dateRange);
+        console.log(JSON.stringify(errorSearchOptions));
+        retrieveErrorRecords(errorSearchOptions, currentPage, pageSize, sortList, dispatch);
+    };
+
+    const onFinishFailed = (errorInfo?: any) => {
+        console.log(errorInfo);
+    };
+
+    const [showGenerateCsv, setShowGenerateCsv] = useState<boolean>(false);
+    const onGenerateCsvClicked = () => {
+        setShowGenerateCsv(true);
+    }
+
+    return (
+        <Form layout='vertical' form={form} name="search-options" onFinish={onFinish} onFinishFailed={onFinishFailed}
+              onFieldsChange={validateForm} onValuesChange={onValuesChanged} initialValues={initialValues}>
+            <Card bodyStyle={{ backgroundColor: colorgray7 }}>
+                <Row gutter={[DEFAULT_FORM_GUTTER_X, DEFAULT_FORM_GUTTER_Y]}>
+                    <Col span={6} className={"category"}>
+                        <div style={{ marginBottom: '8px' }}>
+                            <Category />
+                        </div>
+                        <text className={"asterisk"}> *</text>
+                        <text className={"text"} style={{ fontSize: '12pt' }}>Choose One or More</text>
+                        <div style={{ marginBottom: '8px' }}>
+                            <TransactionID setFieldsValue={form.setFieldsValue} validateForm={validateForm} />
+                        </div>
+                    </Col>
+                    <Col span={6} className={"memberGroupID"}>
+                        <div style={{ marginBottom: '7px' }}>
+                            <MemberGroupID setFieldsValue={form.setFieldsValue}
+                                setMemberGroupName={setMemberGroupName}
+                                memberGroupName={memberGroupName}
+                                getFieldsValue={form.getFieldsValue}
+                            />
+                        </div>
+                    </Col>
+                    <Col span={6} className={"memberID"}>
+                        <div style={{ marginBottom: '8px' }}>
+                            <MemberID setFieldsValue={form.setFieldsValue} validateForm={validateForm} />
+                        </div>
+                    </Col>
+                </Row>
+
