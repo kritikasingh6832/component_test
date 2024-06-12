@@ -1,0 +1,71 @@
+<Form layout='vertical' form={form} name="search-options" onFinish={onFinish} onFinishFailed={onFinishFailed}
+              onFieldsChange={validateForm} onValuesChange={onValuesChanged} initialValues={initialValues}>
+            <Card bodyStyle={{ backgroundColor: colorgray7 }}>
+                <Row gutter={[DEFAULT_FORM_GUTTER_X, DEFAULT_FORM_GUTTER_Y]}>
+                    <Col span={6} className={"category"}>
+                        <div style={{ marginBottom: '8px' }}>
+                            <Category />
+                        </div>
+                        <text className={"asterisk"}> *</text>
+                        <text className={"text"} style={{ fontSize: '12pt' }}>Choose One or More</text>
+                    </Col>
+                    <Col span={6} className={"memberGroupID"}>
+                        <div style={{ marginBottom: '7px' }}>
+                            <MemberGroupID setFieldsValue={form.setFieldsValue}
+                                setMemberGroupName={setMemberGroupName}
+                                memberGroupName={memberGroupName}
+                                getFieldsValue={form.getFieldsValue}
+                            />
+                        </div>
+                    </Col>
+                    <Col span={6} className={"memberID"}>
+                        <div style={{ marginBottom: '8px' }}>
+                            <MemberID setFieldsValue={form.setFieldsValue} validateForm={validateForm} />
+                        </div>
+                    </Col>
+                    <Col span={6} className={"transactionID"}>
+                        <div style={{ marginBottom: '8px' }}>
+                            <TransactionID setFieldsValue={form.setFieldsValue} validateForm={validateForm} />
+                        </div>
+                    </Col>
+                </Row>
+                <Row gutter={[DEFAULT_FORM_GUTTER_X, DEFAULT_FORM_GUTTER_Y]}>
+                    <Col span={6}>
+                        <div style={{ marginBottom: '8px' }}>
+                            <DateRange />
+                        </div>
+                    </Col>
+                    <Col span={6}>
+                        <TransactionCategory />
+                    </Col>
+                    <Col span={6}>
+                        <MemberFirstName />
+                    </Col>
+                    <Col span={6}>
+                        <MemberLastName />
+                    </Col>
+                </Row>
+                <Row gutter={[DEFAULT_FORM_GUTTER_X, DEFAULT_FORM_GUTTER_Y]}>
+                    <Col span={6}>
+                        <MessageCode setFieldsValue={form.setFieldsValue} />
+                    </Col>
+                    <Col span={6}>
+                        <MessageStatus />
+                    </Col>
+                    <Col span={6}>
+                        <FileName />
+                    </Col>
+                    <Col span={6}>
+                        <MessagePriority disabled={messagePriorityDisabled} />
+                    </Col>
+                </Row>
+                <Row gutter={[DEFAULT_FORM_GUTTER_X, DEFAULT_FORM_GUTTER_Y]}>
+                    <Col span={6}>
+                        <MemberTransactionType />
+                    </Col>
+                    <Col span={6}>
+                        <BookOfBusinessType />
+                    </Col>
+                    <Col span={6}>
+                        <RevenueArrangement />
+                    </
