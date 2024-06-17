@@ -1,0 +1,1276 @@
+export const FETCH = 'FETCH';
+export const SUCCESS = 'SUCCESS';
+export const ERROR = 'ERROR';
+export const RESET = 'RESET';
+export const UPDATE = 'UPDATE';
+
+export const GET_MEMBERS = 'GET_MEMBERS';
+export const GET_STATISTICS = 'GET_STATISTICS'
+export const UPDATE_ERROR = 'UPDATE_ERROR';
+export const GET_MEMBER_GROUPS = 'GET_MEMBER_GROUPS';
+export const GET_PROCESSES = 'GET_PROCESSES';
+export const GET_MEMBERS_POPUP = 'GET_MEMBERS_POPUP';
+export const GET_MESSAGES_POPUP = 'GET_MESSAGES_POPUP';
+export const GET_POTENTIAL_MATCH_RESULTS = 'GET_POTENTIAL_MATCH_RESULTS';
+export const UPDATE_BULK_CLOSE = 'UPDATE_BULK_CLOSE';
+export const SELECTED_ROW_KEYS = 'SELECTED_KEYS';
+
+export const DEFAULT_MODAL_WIDTH = '1500px';
+export const DEFAULT_FORM_GUTTER_X = 16;
+export const DEFAULT_FORM_GUTTER_Y = 12;
+
+export const SERVICE_DATE_FORMAT = 'YYYY-MM-DD HH:mm:ss a z';
+export const SERVICE_DATE_QUERY_FORMAT = 'YYYY-MM-DD';
+export const DATE_DISPLAY_FORMAT = 'MM/DD/YYYY';
+export const DATE_TIME_DISPLAY_FORMAT = 'MM/DD/YYYY hh:mm:ss A z';
+export const CST_TIMEZONE = "America/Chicago";
+export const POTENTIAL_MATCH_POPUP_DATE_FORMAT = 'MM-DD-YYYY';
+
+export const CHECKBOX_INDETERMINATE_CLASS = "ant-checkbox-indeterminate";
+export const EXPANDED_CLASS = "ant-table-row-expand-icon-expanded";
+export const COLLAPSED_CLASS = "ant-table-row-expand-icon-collapsed";
+
+export const ENROL_CATEGORY_BTCH = "BTCH";
+export const ENROL_CATEGORY_DMBTCH = "DMBTCH";
+export const ENROL_CATEGORY_MIGBTCH = "MIGBTCH";
+export const ENROL_CATEGORY_RTSC = "RTSC";
+
+export const ENROL_SOURCESYSTEM_SAMX = "SAMX";
+export const ENROL_SOURCESYSTEM_SAMCIRRUS = "SAMCIRRUS";
+export const GET_MEMBER_DETAILS = 'GET_MEMBER_DETAILS';
+
+//References
+interface Reference {
+    asList: Function,
+    getLabel: Function,
+    getValue: Function,
+    size: Function,
+
+    [key: string]: any
+}
+
+interface ReferenceEntry {
+    value: string,
+    label: string,
+}
+
+interface ReferenceList {
+    [key: string]: ReferenceEntry
+}
+
+function createReference(data: ReferenceList): Reference {
+    return Object.freeze({
+        asList: function (): ReferenceEntry[] {
+            return Object.values(data);
+        },
+        size: function () {
+            return this.asList().length
+        },
+        values: function (): string[] {
+            return this.asList().map(o => o.value);
+        },
+        labels: function (): string[] {
+            return this.asList().map(o => o.label);
+        },
+        getLabel: function (value: string) {
+            let found = this.asList().find(o => o.value === value);
+            return found ? found.label : null;
+        },
+        getValue: function (label: string) {
+            let found = this.asList().find(o => o.label === label);
+            return found ? found.value : null;
+        },
+        ...data
+    });
+}
+
+//TODO validate questionable entries
+export const MESSAGE_CATEGORY: Reference = createReference({
+    BATCH_MIGRATION: {
+        value: "MIGBTCH",
+        label: "EDI/JSON - Migration File"
+    },
+    BATCH_FILE: {
+        value: "BTCH",
+        label: "EDI/JSON - Non-Migration File"
+    },
+    BATCH_DUAL_MAINTENANCE: {
+        value: "DMBTCH",
+        label: "EDI/JSON - Dual Maintenance File"
+    },
+    API: {
+        value: "RTSC",
+        label: "API - Realtime Service Call"
+    },
+    UI: {
+        value: "UINT",
+        label: "User Interface"
+    },
+    UTILITY: {
+        value: "UTIL",
+        label: "Utility / Event"
+    },
+    UNKNOWN: {
+        value: "UNKNOWN",
+        label: "Unknown",
+    }
+});
+
+export const ENROLLMENT_FILE_MESSAGE_CATEGORY_LIST = [
+    MESSAGE_CATEGORY.BATCH_FILE,
+    MESSAGE_CATEGORY.BATCH_MIGRATION,
+    MESSAGE_CATEGORY.BATCH_DUAL_MAINTENANCE,
+]
+//TODO validate questionable entries
+export const MESSAGE_STATUS: Reference = createReference({
+    CLOSED: {
+        value: "0",
+        label: "Closed"
+    },
+    OPEN: {
+        value: "1",
+        label: "Open"
+    },
+    IN_PROGRESS: {
+        value: "2",
+        label: "In Progress"
+    },
+
+    //TODO these are valid, but not in mock up
+    REPROCESSED: {
+        value: "3",
+        label: "Reprocessed"
+    },
+    BULK_CLOSED: {
+        value: "5",
+        label: "Bulk Closed"
+    },
+    SELECTIVE_CLOSED: {
+        value: "8",
+        label: "Selective Closed"
+    },
+
+    //TODO these are valid, but not in mock up or excel
+    // CLOSED_INVENTORY_REMEDIATION: {
+    //     value: "4",
+    //     label: "Closed. Inventory Remediation"
+    // },
+    // CLOSE_CURRENT_AND_FUTURE: {
+    //     value: "6",
+    //     label: "Close Current And Future"
+    // },
+    AUTO_CLOSE: {
+        value: "7",
+        label: "Auto Close"
+    }
+});
+export const MESSAGE_STATUS_CLOSED_LIST = [
+    MESSAGE_STATUS.CLOSED.value, MESSAGE_STATUS.BULK_CLOSED.value, MESSAGE_STATUS.AUTO_CLOSE.value
+]
+export const MESSAGE_STATUS_UPDATE_LIST = MESSAGE_STATUS.asList().map((messageStatus: Reference) => {
+    return {
+        value: messageStatus.value,
+        label: messageStatus.label,
+        disabled: ![MESSAGE_STATUS.CLOSED, MESSAGE_STATUS.OPEN, MESSAGE_STATUS.IN_PROGRESS].includes(messageStatus)
+    }
+});
+
+//TODO fully validate this list
+export const STATES: Reference = createReference({
+    ALABAMA: {
+        value: "AL",
+        label: "ALABAMA"
+    },
+    ALASKA: {
+        value: "AK",
+        label: "ALASKA"
+    },
+    AMERICAN_SAMOA: {
+        value: "AS",
+        label: "AMERICAN SAMOA"
+    },
+    ARIZONA: {
+        value: "AZ",
+        label: "ARIZONA"
+    },
+    ARKANSAS: {
+        value: "AR",
+        label: "ARKANSAS"
+    },
+    ARMED_FORCES_AMERICAS_EXCEPT_CANADA: {
+        value: "AA",
+        label: "Armed Forces Americas(except Canada)"
+    },
+    ARMED_FORCES_EUROPE: {
+        value: "AE",
+        label: "Armed Forces Europe"
+    },
+    ARMED_FORCES_PACIFIC: {
+        value: "AP",
+        label: "Armed Forces Pacific"
+    },
+    CALIFORNIA: {
+        value: "CA",
+        label: "CALIFORNIA"
+    },
+    COLORADO: {
+        value: "CO",
+        label: "COLORADO"
+    },
+    CONNECTICUT: {
+        value: "CT",
+        label: "CONNECTICUT"
+    },
+    DELAWARE: {
+        value: "DE",
+        label: "DELAWARE"
+    },
+    DISTRICT_OF_COLUMBIA: {
+        value: "DC",
+        label: "DISTRICT OF COLUMBIA"
+    },
+    FEDERATED_STATES_OF_MICRONESIA: {
+        value: "FM",
+        label: "FEDERATED STATES OF MICRONESIA"
+    },
+    FLORIDA: {
+        value: "FL",
+        label: "FLORIDA"
+    },
+    FOREIGN: {
+        value: "FO",
+        label: "FOREIGN"
+    },
+    GEORGIA: {
+        value: "GA",
+        label: "GEORGIA"
+    },
+    GUAM: {
+        value: "GU",
+        label: "GUAM"
+    },
+    HAWAII: {
+        value: "HI",
+        label: "HAWAII"
+    },
+    IDAHO: {
+        value: "ID",
+        label: "IDAHO"
+    },
+    ILLINOIS: {
+        value: "IL",
+        label: "ILLINOIS"
+    },
+    INDIANA: {
+        value: "IN",
+        label: "INDIANA"
+    },
+    IOWA: {
+        value: "IA",
+        label: "IOWA"
+    },
+    KANSAS: {
+        value: "KS",
+        label: "KANSAS"
+    },
+    KENTUCKY: {
+        value: "KY",
+        label: "KENTUCKY"
+    },
+    LOUISIANA: {
+        value: "LA",
+        label: "LOUISIANA"
+    },
+    MAINE: {
+        value: "ME",
+        label: "MAINE"
+    },
+    MARSHALL_ISLANDS: {
+        value: "MH",
+        label: "MARSHALL ISLANDS"
+    },
+    MARYLAND: {
+        value: "MD",
+        label: "MARYLAND"
+    },
+    MASSACHUSETTS: {
+        value: "MA",
+        label: "MASSACHUSETTS"
+    },
+    MICHIGAN: {
+        value: "MI",
+        label: "MICHIGAN"
+    },
+    MINNESOTA: {
+        value: "MN",
+        label: "MINNESOTA"
+    },
+    MISSISSIPPI: {
+        value: "MS",
+        label: "MISSISSIPPI"
+    },
+    MISSOURI: {
+        value: "MO",
+        label: "MISSOURI"
+    },
+    MONTANA: {
+        value: "MT",
+        label: "MONTANA"
+    },
+    NEBRASKA: {
+        value: "NE",
+        label: "NEBRASKA"
+    },
+    NEVADA: {
+        value: "NV",
+        label: "NEVADA"
+    },
+    NEW_HAMPSHIRE: {
+        value: "NH",
+        label: "NEW HAMPSHIRE"
+    },
+    NEW_JERSEY: {
+        value: "NJ",
+        label: "NEW JERSEY"
+    },
+    NEW_MEXICO: {
+        value: "NM",
+        label: "NEW MEXICO"
+    },
+    NEW_YORK: {
+        value: "NY",
+        label: "NEW YORK"
+    },
+    NORTH_CAROLINA: {
+        value: "NC",
+        label: "NORTH_CAROLINA"
+    },
+    NORTH_DAKOTA: {
+        value: "ND",
+        label: "NORTH DAKOTA"
+    },
+    NORTHERN_MARIANA_ISLANDS: {
+        value: "MP",
+        label: "NORTHERN MARIANA ISLANDS"
+    },
+    OHIO: {
+        value: "OH",
+        label: "OHIO"
+    },
+    OKLAHOMA: {
+        value: "OK",
+        label: "OKLAHOMA"
+    },
+    OREGON: {
+        value: "OR",
+        label: "OREGON"
+    },
+    PALAU: {
+        value: "PW",
+        label: "PALAU"
+    },
+    PENNSYLVANIA: {
+        value: "PA",
+        label: "PENNSYLVANIA"
+    },
+    PUERTO_RICO: {
+        value: "PR",
+        label: "PUERTO RICO"
+    },
+    RHODE_ISLAND: {
+        value: "RI",
+        label: "RHODE ISLAND"
+    },
+    SOUTH_CAROLINA: {
+        value: "SC",
+        label: "SOUTH CAROLINA"
+    },
+    SOUTH_DAKOTA: {
+        value: "SD",
+        label: "SOUTH DAKOTA"
+    },
+    TENNESSEE: {
+        value: "TN",
+        label: "TENNESSEE"
+    },
+    TEXAS: {
+        value: "TX",
+        label: "TEXAS"
+    },
+    UTAH: {
+        value: "UT",
+        label: "UTAH"
+    },
+    VERMONT: {
+        value: "VT",
+        label: "VERMONT"
+    },
+    VIRGIN_ISLANDS: {
+        value: "VI",
+        label: "VIRGIN ISLANDS"
+    },
+    VIRGINIA: {
+        value: "VA",
+        label: "VIRGINIA"
+    },
+    WASHINGTON: {
+        value: "WA",
+        label: "WASHINGTON"
+    },
+    WEST_VIRGINIA: {
+        value: "WV",
+        label: "WEST VIRGINIA"
+    },
+    WISCONSIN: {
+        value: "WI",
+        label: "WISCONSIN"
+    },
+    WYOMING: {
+        value: "WY",
+        label: "WYOMING"
+    }
+});
+//TODO fully validate this list
+export const MEMBER_EXTERNAL_ID_TYPE: Reference = createReference({
+    CLIENT_REPORTING_CATEGORY: {
+        value: "17",
+        label: "17 - Client Reporting Category"
+    },
+    CLIENT_NUMBER: {
+        value: "23",
+        label: "23 - Client Number"
+    },
+    CROSS_REFERENCE_NUMBER: {
+        value: "60",
+        label: "6O - Cross Reference Number"
+    },
+    MEDICARE_ID: {
+        value: "F6",
+        label: "F6 - Medicare ID"
+    },
+    MEMBER_ID_CARD_SERIAL_NUMBER: {
+        value: "GH",
+        label: "GH - Member ID Card Serial Number"
+    },
+    PRIME_MEMBER_ID: {
+        value: "PR",
+        label: "PR - Prime Member ID"
+    },
+    PULSE_MEMBER_ID: {
+        value: "PS",
+        label: "PS - Pulse Member ID"
+    },
+    PRIOR_IDENTIFIER_NUMBER: {
+        value: "Q4",
+        label: "Q4 - Prior Identifier Number"
+    },
+    SUBSCRIBER_QUOTE_ID_CARD_SERIAL_NUMBER: {
+        value: "QC",
+        label: "QC - Subscriber Quote ID Card Serial Number"
+    },
+    TUFTS_Member_ID: {
+        value: "TU",
+        label: "TU - TUFTS Member ID"
+    },
+    ACI_CIS_Member_ID: {
+        value: "ACI",
+        label: "ACI - ACIS Member ID"
+    }
+});
+//TODO fully validate this list
+export const MESSAGE_PRIORITY: Reference = createReference({
+    LOW: {
+        value: "L",
+        label: "Low"
+    },
+    MEDIUM: {
+        value: "M",
+        label: "Medium"
+    },
+    HIGH: {
+        value: "H",
+        label: "High"
+    }
+});
+//TODO fully validate this list
+export const ENROLLMENT_SOURCE: Reference = createReference({
+    PULSE: {
+        value: "PUL",
+        label: "PULSE"
+    },
+    PRIME: {
+        value: "PRI",
+        label: "PRIME"
+    },
+    MEMBER_GROUP_TPA: {
+        value: "MEMGRP",
+        label: "Member Group / TPA"
+    },
+    ACIS: {
+        value: "ACI",
+        label: "ACIS"
+    },
+    ALL_SAVERS: {
+        value: "ALLSVRS",
+        label: "All Savers"
+    },
+    BNMG: {
+        value: "BNMG",
+        label: "Surest MemGroup Code"
+    },
+    MYUHC_PORTAL: {
+        value: "MYUHCPRTL",
+        label: "myUHC Portal"
+    },
+    OXFORD_BE_PORTAL: {
+        value: "OXBEPRTL",
+        label: "Oxford B&E Portal"
+    },
+    TARGET_BE_PORTAL: {
+        value: "TRGTPRTL",
+        label: "Target B&E Portal"
+    },
+    SAM_CIRRUS: {
+        value: "SAMCIRRUS",
+        label: "SAM-Cirrus"
+    },
+    SAM_X: {
+        value: "SAMX",
+        label: "SAM-X"
+    },
+    MEMBER_UTILITY: {
+        value: "MEMUTIL",
+        label: "Member Utility / Event"
+    },
+    MANUAL_ENTRY: {
+        value: "MANENTRY",
+        label: "Manual Entry"
+    },
+    UNKNOWN: {
+        value: "UNKNOWN",
+        label: "Unknown"
+    }
+
+    //TODO this are valid values from cirrus-core enrollmentSource reference. appears to be covered by TRANSACTION_CATEGORY?
+    // ALL: {
+    //     value: "ALL",
+    //     label: "All Errors"
+    // },
+    // API: {
+    //     value: "API",
+    //     label: "API"
+    // },
+    // API_BENE: {
+    //     value: "API_BENE",
+    //     label: "API Coverage"
+    // },
+    // API_DEM: {
+    //     value: "API_DEM",
+    //     label: "API Demographic"
+    // },
+    // API_ENROLL: {
+    //     value: "API_ENROLL",
+    //     label: "API Enroll"
+    // },
+    // API_FULL: {
+    //     value: "API_FULL",
+    //     label: "API Full"
+    // },
+    // API_TERM: {
+    //     value: "API_TERM",
+    //     label: "API Term"
+    // },
+    // API_UPDATE: {
+    //     value: "API_UPDATE",
+    //     label: "API Update"
+    // },
+    // BGDIRU: {
+    //     value: "BGDIRU",
+    //     label: "Bill Group Detail Invoice Re-Derivation"
+    // },
+    // BGINV: {
+    //     value: "BGINV",
+    //     label: "Bill Invoice"
+    // },
+    // BGMIG: {
+    //     value: "BGMIG",
+    //     label: "Bill Group Migration"
+    // },
+    // EDI: {
+    //     value: "EDI",
+    //     label: "EDI"
+    // },
+    // EPS_DER: {
+    //     value: "EPS_DER",
+    //     label: "EPS ReDerivation Utility"
+    // },
+    // FAC: {
+    //     value: "FAC",
+    //     label: "Facets Opt In"
+    // },
+    // FUL: {
+    //     value: "FUL",
+    //     label: "Fulfillment"
+    // },
+    // MAN: {
+    //     value: "MAN",
+    //     label: "Manual Entry"
+    // },
+    // MAU: {
+    //     value: "MAU",
+    //     label: "Max Age Utility"
+    // },
+    // MBPC: {
+    //     value: "MBPC",
+    //     label: "Member Billing Pref Change Utility"
+    // },
+    // MBRU: {
+    //     value: "MBRU",
+    //     label: "Member Benefit Reinstate Utility"
+    // },
+    // MBTU: {
+    //     value: "MBTU",
+    //     label: "Member Benefit Term Utility"
+    // },
+    // MBU: {
+    //     value: "MBU",
+    //     label: "Member Bundle Update Utility"
+    // },
+    // MEM: {
+    //     value: "MEM",
+    //     label: "Member Event MicroService"
+    // },
+    // MGC: {
+    //     value: "MGC",
+    //     label: "Member Group Contract Cancellation"
+    // },
+    // MGCOC: {
+    //     value: "MGCOC",
+    //     label: "Member Group Contract Option Cancellation"
+    // },
+    // MGCOR: {
+    //     value: "MGCOR",
+    //     label: "Member Group Contract Option Reinstate"
+    // },
+    // MGCOT: {
+    //     value: "MGCOT",
+    //     label: "Member Group Contract Option Term"
+    // },
+    // MGCR: {
+    //     value: "MGCR",
+    //     label: "Member Group Contract Cancel Reinstatement"
+    // },
+    // MGRAC: {
+    //     value: "MGRAC",
+    //     label: "Member Group Contract Option Reinstatement after Cancellation"
+    // },
+    // MLD: {
+    //     value: "MLD",
+    //     label: "Multi-Member Benefit Logical Delete and Term"
+    // },
+    // MMU: {
+    //     value: "MMU",
+    //     label: "Member Move Utility"
+    // },
+    // MPL: {
+    //     value: "MPL",
+    //     label: "MPL"
+    // },
+    // MPMU: {
+    //     value: "MPMU",
+    //     label: "Member Population Move Utility"
+    // },
+    // MPTU: {
+    //     value: "MPTU",
+    //     label: "Member Provider Term Utility"
+    // },
+    // MRU: {
+    //     value: "MRU",
+    //     label: "Membership Refresh Utility"
+    // },
+    // MSR: {
+    //     value: "MSR",
+    //     label: "Member Selective Refresh"
+    // },
+    // PCU: {
+    //     value: "PCU",
+    //     label: "Plan Change Utility"
+    // },
+    // PRLU: {
+    //     value: "PRLU",
+    //     label: "Provider Randomization Letter Utility"
+    // },
+    // SAFES: {
+    //     value: "SAFES",
+    //     label: "Safes"
+    // },
+    // TPL: {
+    //     value: "TPL",
+    //     label: "Third Party Liability"
+    // }
+ });
+//TODO fully validate this list when added
+export const BOOK_OF_BUSINESS_TYPE: Reference = createReference({
+    UHC_LEVEL_FUNDED: {
+        value: "LF",
+        label: "UHC Level Funded"
+    },
+    OXFORD_LEVEL_FUNDED: {
+        value: "OL",
+        label: "Oxford Level Funded"
+    },
+    OXFORD_FULLY_INSURED: {
+        value: "OX",
+        label: "Oxford FI/ASO"
+    },
+    RIVER_VALLEY: {
+        value: "RV",
+        label: "River Valley"
+    },
+    TUFTS: {
+        value: "TU",
+        label: "Tufts"
+    },
+    UHC: {
+        value: "UH",
+        label: "United Healthcare Insurance Company (UHIC)"
+    },
+    NOT_ASSIGNED: {
+        value: "Not Assigned",
+        label: "Not Assigned"
+    }
+});
+//TODO fully validate this list when added
+export const REVENUE_ARRANGEMENT: Reference = createReference({
+    ASO: {
+        value: "04",
+        label: "ASO"
+    },
+    ASO_WITH_STOPLOSS_PROTECTION: {
+        value: "06",
+        label: "ASO with Stoploss"
+    },
+    FULLY_INSURED: {
+        value: "01",
+        label: "FI"
+    },
+    LEVEL_FUNDED: {
+        value: "05",
+        label: "Level Funded"
+    },
+    MODIFIED_MINIMUM_PAYMENT: {
+        value: "03",
+        label: "MMP"
+    },
+    MINIMUM_PAYMENT: {
+        value: "02",
+        label: "MP"
+    },
+    RETRO_RATED: {
+        value: "07",
+        label: "Retro Rated"
+    },
+    NOT_ASSIGNED: {
+        value: "Not Assigned",
+        label: "Not Assigned"
+    }
+});
+//TODO fully validate this list when added
+export const MEMBER_TRANSACTION_TYPE: Reference = createReference({
+    NEW_MEMBER_GROUP_INSTALL: {
+        value: "43",
+        label: "New Member Group Install"
+    },
+    MIGRATION_MEMBER_GROUP_INSTALL: {
+        value: "44",
+        label: "Migration Member Group Install"
+    },
+    ASSUMED_RENEWAL: {
+        value: "45",
+        label: "Assumed Renewal (AST)"
+    },
+    SOLD_RENEWAL: {
+        value: "46",
+        label: "Sold Renewal (RST)"
+    },
+    MEMBERSHIP_ONLY: {
+        value: "MO",
+        label: "Membership Only"
+    }
+});
+//TODO validate questionable entries
+export const TRANSACTION_CATEGORY: Reference = createReference({
+    JSON_FILE: {
+        value: "JSON",
+        label: "JSON File"
+    },
+    NON_STANDARD_FILE: {
+        value: "NONSTD",
+        label: "Non-Standard File Format"
+    },
+    EDI_834_5010_FILE: {
+        value: "EDI834510",
+        label: "EDI 834 5010 File"
+    },
+    CIRRUS_PROPRIETARY_FILE: {
+        value: "PROPRIETRY",
+        label: "Cirrus Proprietary File"
+    },
+    MEMBER_ENROLL_API: {
+        value: "ENROLLAPI",
+        label: "Member Enrollment API"
+    },
+    MEMBER_UPDATE_API: {
+        value: "UPDATEAPI",
+        label: "Member Update API"
+    },
+    MEMBER_TERM_API: {
+        value: "TERMAPI",
+        label: "Member Term API"
+    },
+    MEMBER_DEMOGRAPHIC_API: {
+        value: "DEMOAPI",
+        label: "Member Demographic-Only API"
+    },
+    MEMBER_BENEFIT_API: {
+        value: "BENEFITAPI",
+        label: "Member Benefit API"
+    },
+    BILL_GROUP_INVOICE_REDERIVATION_UTILITY: {
+        value: "BGDTIUTL",
+        label: "Bill Group Dtl Invoice Rederivation Util"
+    },
+    EPS_REDERIVATION_UTILITY: {
+        value: "EPSDERVUTL",
+        label: "EPS Re-Derivation Utility"
+    },
+    //TODO commented on the excel sheet
+    // MEMBER_ACCUMULATOR_OVERAGE: {
+    //     value: "ACMOVGUTL",
+    //     label: "Member Accumulator Overage"
+    // },
+    MEMBER_BENEFIT_REFRESH_UTILITY: {
+        value: "BENRFSHUTL",
+        label: "Member Benefit Refresh Utility"
+    },
+    //TODO commented on the excel sheet
+    // MEMBER_MERGE_UTILITY: {
+    //     value: "MEMMRGUTL",
+    //     label: "Member Merge Utility"
+    // },
+    MEMBER_MOVE_UTILITY: {
+        value: "MEMMOVUTL",
+        label: "Member Move Utility"
+    },
+    //TODO commented on the excel sheet
+    // MEMBER_NOTE_MASS_UPDATE_UTILITY: {
+    //     value: "NOTEUPDUTL",
+    //     label: "Member Note Mass Update Utility"
+    // },
+    MEMBER_OOB_OOC_RECALCULATION_UTILITY: {
+        value: "OOBOOCUTL",
+        label: "Member OOB/OOC Recalculation Utility"
+    },
+    //TODO commented on the excel sheet
+    // MEMBERSHIP_UTILITY: {
+    //     value: "MEMSHPUTL",
+    //     label: "Membership Utility"
+    // },
+    MEMBER_GROUP_CONTRACT_OPT_BUNDLE_UPDATE: {
+        value: "COBNDLUPT",
+        label: "Member Group Contract Opt Bundle Update"
+    },
+    MULTI_MEMBER_BENEFIT_DELETE_TERM_UTILITY: {
+        value: "DELTERMUTL",
+        label: "Multi-Member Benefit Delete/Term Utility"
+    },
+    OVER_AGE_DEPENDENT_UTILITY: {
+        value: "OVRAGEUTL",
+        label: "Over Age Dependent Utility"
+    },
+    SAFES_EXTRACT_UTILITY: {
+        value: "SAFSEXTUTL",
+        label: "SAFES Extract Utility"
+    },
+    UPLOAD_FILE_AND_TRIGGER_EXTERNAL_PROCESS_UTILITY: {
+        value: "FILTRGUTL",
+        label: "Upload File & Trigger Ext Process Util"
+    },
+    UPLOAD_SUPPLEMENTAL_DERIVATION_FILE_UTILITY: {
+        value: "SUPPFILUTL",
+        label: "Upload Supplemental Derivation File Util"
+    },
+    CONTRACT_CANCEL_EVENT: {
+        value: "CTRCNCL",
+        label: "Contract Cancel Event"
+    },
+    CONTRACT_TERM_EVENT: {
+        value: "CTRTERM",
+        label: "Contract Term Event"
+    },
+    CONTRACT_REINSTATE_EVENT: {
+        value: "CTRREINST",
+        label: "Contract Reinstate Event"
+    },
+    CONTACT_OPTION_CANCEL_EVENT: {
+        value: "CTROPTCNCL",
+        label: "Contract Option Cancel Event"
+    },
+    CONTACT_OPTION_TERM_EVENT: {
+        value: "CTROPTTERM",
+        label: "Contract Option Term Event"
+    },
+    CONTRACT_OPTION_REINSTATE_EVENT: {
+        value: "CTROPTREIN",
+        label: "Contract Option Reinstate Event"
+    },
+    PROVIDER_CONTRACT_TERM_EVENT: {
+        value: "PROVDRTERM",
+        label: "Provider Contract Term Event"
+    },
+    MEMBER_GUIDED_ENTRY_UI: {
+        value: "GUIDENTRY",
+        label: "Member Guided Entry UI"
+    },
+    MEMBER_TABBED_UI: {
+        value: "TABENTRY",
+        label: "Member Tabbed UI"
+    }
+});
+//TODO validate questionable entries
+export const ENTITY: Reference = createReference({
+    BENEFITS: {
+        value: "BENDOM",
+        label: "Benefit Domain"
+    },
+    MEMBER_GROUP: {
+        value: "MEMGRPDOM",
+        label: "Member Group Domain"
+    },
+    MEMBER: {
+        value: "MEMBERDOM",
+        label: "Member Domain"
+    },
+    PROVIDER: {
+        value: "PROVDRDOM",
+        label: "Provider Domain"
+    },
+    //TODO these were in the mockup
+    // CLAIMS: {
+    //     value: "Claims",
+    //     label: "Claims"
+    // },
+    // FINANCIAL: {
+    //     value: "Financial",
+    //     label: "Financial"
+    // },
+    // DOFR_DELEGATION: {
+    //     value: "DOFR/Delegation",
+    //     label: "DOFR/Delegation"
+    // },
+    // CAPITATION: {
+    //     value: "Capitation",
+    //     label: "Capitation"
+    // },
+    // PRICING: {
+    //     value: "Pricing",
+    //     label: "Pricing"
+    // }
+});
+//TODO fully validate this list when added
+export const EDIT_CATEGORY: Reference = createReference({
+    ACCUMULATORS: {
+        value: "ACCUMS",
+        label: "Accumulators"
+    },
+    BENEFITS: {
+        value: "BENEFITS",
+        label: "Benefits"
+    },
+    CLC: {
+        value: "CLC",
+        label: "Coverage Level Code"
+    },
+    COB: {
+        value: "COB",
+        label: "Coordination of Benefits"
+    },
+    CONTACT_ADDRESS: {
+        value: "CONTACT_AD",
+        label: "Contacts - Address"
+    },
+    CONTACT_EMAIL: {
+        value: "CONTACT_EM",
+        label: "Contacts - Email"
+    },
+    CONTACT_PHONE: {
+        value: "CONTACT_PH",
+        label: "Contacts - Phone"
+    },
+    DEMOGRAPHICS: {
+        value: "DEMO",
+        label: "Demographics"
+    },
+    EPS: {
+        value: "EPS",
+        label: "Enrollment Profile Set - pre derivation"
+    },
+    FILE_VALIDATION: {
+        value: "FILE_VALID",
+        label: "File Validation"
+    },
+    FINANCIAL_POPULATION: {
+        value: "FINPOP",
+        label: "Financial Population - post derivation"
+    },
+    FULFILLMENT: {
+        value: "FULFILL",
+        label: "Fulfillment"
+    },
+    MEMBER_MATCH: {
+        value: "MBR_MATCH",
+        label: "Member Match"
+    },
+    PREPOPULATE_BILLGROUP: {
+        value: "PREPOP_BG",
+        label: "Pre Populate Bill Group"
+    },
+    PREPOPULATE_BUNDLEOPTION: {
+        value: "PREPOP_BO",
+        label: "Pre Populate Bundle Option"
+    },
+    PREPOPULATE_POPULATION: {
+        value: "PREPOP_POP",
+        label: "Pre Populate Population"
+    },
+    PROVIDER: {
+        value: "PROVIDER",
+        label: "Provider"
+    },
+    SUBSCRIBER_AFFILIATION: {
+        value: "SUBS_AFFIL",
+        label: "Subscriber Affiliations"
+    },
+    UTILIZATION: {
+        value: "UTILIZATN",
+        label: "Utilization"
+    },
+    WAIT_STATE: {
+        value: "WAIT_STATE",
+        label: "Wait State"
+    }
+});
+export const RELATIONSHIP_CODE: Reference = createReference({
+    SPOUSE: {
+        value: "01",
+        label: "Spouse"
+    },
+    FATHER_OR_MOTHER: {
+        value: "03",
+        label: "Father or Mother"
+    },
+    GRANDFATHER_OR_GRANDMOTHER: {
+        value: "04",
+        label: "Grandfather or Grandmother"
+    },
+    GRANDSON_OR_GRANDDAUTHER: {
+        value: "05",
+        label: "Grandson or Granddaughter"
+    },
+    UNCLE_OR_AUNT: {
+        value: "06",
+        label: "Uncle or Aunt"
+    },
+    NEPHEW_OR_NIECE: {
+        value: "07",
+        label: "Nephew or Niece"
+    },
+    COUSIN: {
+        value: "08",
+        label: "Cousin"
+    },
+    ADOPTED_CHILD: {
+        value: "09",
+        label: "Adopted Child"
+    },
+    FOSTER_CHILD: {
+        value: "10",
+        label: "Foster Child"
+    },
+    SON_IN_LAW_OR_DAUGHTER_IN_LAW: {
+        value: "11",
+        label: "Son-in-law or Daughter-in-law"
+    },
+    BROTHER_IN_LAW_OR_SISTER_IN_LAW: {
+        value: "12",
+        label: "Brother-in-law or Sister-in-law"
+    },
+    MOTHER_IN_LAW_OR_FATHER_IN_LAW: {
+        value: "13",
+        label: "Mother-in-law or Father-in-law"
+    },
+    BROTHER_OR_SISTER: {
+        value: "14",
+        label: "Brother or Sister"
+    },
+    WARD: {
+        value: "15",
+        label: "Ward"
+    },
+    STEPSON_OR_STEPDAUTHER: {
+        value: "17",
+        label: "Stepson or Stepdaughter"
+    },
+    SELF: {
+        value: "18",
+        label: "Self"
+    },
+    CHILD: {
+        value: "19",
+        label: "Child"
+    },
+    SPONSORED_DEPENDENT: {
+        value: "23",
+        label: "Sponsored Dependent"
+    },
+    DEPENDENT_OF_A_MINOR_DEPENDENT: {
+        value: "24",
+        label: "Dependent of a Minor Dependent"
+    },
+    EX_SPOUSE: {
+        value: "25",
+        label: "Ex-spouse"
+    },
+    GUARDIAN: {
+        value: "26",
+        label: "Guardian"
+    },
+    COURT_APPOINTED_GUARDIAN: {
+        value: "31",
+        label: "Court Appointed Guardian"
+    },
+    MOTHER: {
+        value: "32",
+        label: "Mother"
+    },
+    FATHER: {
+        value: "33",
+        label: "Father"
+    },
+    COLLATERAL_DEPENDENT: {
+        value: "38",
+        label: "Collateral Dependent"
+    },
+    STEPFATHER: {
+        value: "48",
+        label: "Stepfather"
+    },
+    STEPMOTHER: {
+        value: "49",
+        label: "Stepmother"
+    },
+    LIFE_PARTNER: {
+        value: "53",
+        label: "Life Partner"
+    },
+    NEWBORN: {
+        value: "NB",
+        label: "Newborn"
+    }
+});
+export const CONTRACT_OPTION_TYPE: Reference = createReference({
+    ACCIDENTAL_DEATH_DISMEMBERMENT: {
+        value: "AD",
+        label: "Accidental Death and Dismemberment"
+    },
+    CONTRACEPTIVE_SERVICES_ONLY: {
+        value: "CS",
+        label: "Contraceptive Services Only"
+    },
+    DENTAL: {
+        value: "DN",
+        label: "Dental"
+    },
+    DISABILITY: {
+        value: "DS",
+        label: "Disability"
+    },
+    HIPP: {
+        value: "HP",
+        label: "HIPP"
+    },
+    LIFE_AND_ACCIDENTAL_DEATH: {
+        value: "LD",
+        label: "Life and AD&D Combination"
+    },
+    LIFE: {
+        value: "LI",
+        label: "Life"
+    },
+    MEDICAL: {
+        value: "MD",
+        label: "Medical"
+    },
+    PHARMACY: {
+        value: "RX",
+        label: "Pharmacy"
+    },
+    SPENDING_ACCOUNT: {
+        value: "SP",
+        label: "Spending Account"
+    },
+    VISION: {
+        value: "VS",
+        label: "VISION"
+    }
+});
+//TODO add types for new processes
+export const PROCESS_TYPE: Reference = createReference({
+    BULK_CLOSE: {
+        value: "BULKCLOSE",
+        label: "Bulk Close"
+    },
+    NEW_ATTRIBUTE_REPORT: {
+        value: "NEWATRBRPT",
+        label: "New Attribute Report"
+    },
+    REPORT: {
+        value: "REPORT",
+        label: "Report"
+    },
+    SELECTIVE_CLOSE: {
+        value: "SLCTCLOSE",
+        label: "Selective Close"
+    }
+});
+export const PROCESS_STATUS: Reference = createReference({
+    IN_PROGRESS: {
+        value: "PROCESSING",
+        label: "In Progress"
+    },
+    COMPLETED: {
+        value: "COMPLETED",
+        label: "Completed"
+    },
+    ERROR: {
+        value: "ERROR",
+        label: "Error"
+    }
+});
+
+//TODO when we get to fancy dropdowns that high other options
+export const VALID_CATEGORY_SOURCE_TRANSACTION_COMBINATIONS = [
+    {
+        messageCategory: MESSAGE_CATEGORY.BATCH_FILE,
+        enrollmentSource: [
+            ENROLLMENT_SOURCE.MEMBER_GROUP_TPA,
+            ENROLLMENT_SOURCE.UNKNOWN
+        ],
+        transactionCategory: [
+            TRANSACTION_CATEGORY.JSON_FILE,
+            TRANSACTION_CATEGORY.NON_STANDARD_FILE,
+            TRANSACTION_CATEGORY.EDI_834_5010_FILE,
+            TRANSACTION_CATEGORY.CIRRUS_PROPRIETARY_FILE
+        ]
+    }
+]
