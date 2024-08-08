@@ -1,0 +1,122 @@
+package com.optum.cirrus.rest.api.member.mergedetail.service.impl;
+
+
+import com.optum.cirrus.legacy.core.hold.businesslogic.HoldCode;
+import com.optum.cirrus.member.core.data.MemberHoldVO;
+import com.optum.cirrus.member.core.data.SubsAffiliationVO;
+import com.optum.cirrus.member.core.move.data.MemberMoveContext;
+import com.optum.cirrus.member.core.move.data.MemberMoveDetail;
+import com.optum.cirrus.multitenancy.api.claim.ClaimSearchService;
+import com.optum.cirrus.multitenancy.api.claim.data.request.ClaimSearchByMemberIDRequest;
+import com.optum.cirrus.multitenancy.api.claim.data.response.ClaimSearchByMemberIDResponse;
+import com.optum.cirrus.rest.api.member.mergedetail.data.MemberSubmitRequestDto;
+import com.optum.cirrus.rest.api.member.mergedetail.data.MemberSubmitResponse;
+import com.optum.cirrus.rest.api.member.mergedetail.service.MemberMergeSubmitService;
+import com.optum.cirrus.rest.api.membergroup.common.response.ResponseMessage;
+import com.optum.ocf.dao.data.ValueObject;
+import com.optum.ocf.dao.util.UhgCalendarUtilities;
+import groovy.util.logging.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.util.UriComponentsBuilder;
+
+import java.sql.Date;
+import java.util.ArrayList;
+import java.util.List;
+
+import static com.optum.cirrus.member.core.memberactionevent.MemberActionEventLogger.logMessage;
+import static com.optum.cirrus.member.core.move.businesslogic.impl.MemberMoveErrorHandlerImpl.LOGGER;
+import static java.lang.String.valueOf;
+import static com.optum.cirrus.multitenancy.api.claim.data.request.ClaimSearchByMemberIDRequest.initClaimSearchByMemberIDRequest;
+
+@Service("MemberMergeSubmitService")
+
+@Slf4j
+public class MemberMergeSubmitServiceImpl implements MemberMergeSubmitService {
+    @Autowired
+    private ClaimSearchService claimSearchService;
+
+    @Override
+    public MemberSubmitResponse getClaims(MemberSubmitRequestDto memberSubmitRequestDto, String transID) {
+        long memberID = memberSubmitRequestDto.getMemberID();
+        MemberSubmitResponse response = new MemberSubmitResponse();
+        List<ResponseMessage> responseMessageList = new ArrayList<>();
+        ClaimSearchByMemberIDRequest claimSearchRequestDto = initClaimSearchByMemberIDRequest(valueOf(memberID), null, null);
+        ClaimSearchByMemberIDResponse claimSearchByMemberIDResponse = claimSearchService.searchByMemberID(claimSearchRequestDto);
+        if (claimSearchByMemberIDResponse != null && claimSearchByMemberIDResponse.getClaims() != null && claimSearchByMemberIDResponse.getClaims().size() > 0) {
+            responseMessageList.add(createResponseMessage("Claims Associated", "Source Member has claims associated, please have claims moved to Target Member."));
+        }
+        response.setMessages(responseMessageList);
+        return response;
+    }
+
+    private ResponseMessage createResponseMessage(String code, String message) {
+        ResponseMessage responseMessage = new ResponseMessage();
+        responseMessage.setCode(code);
+        responseMessage.setMessage(message);
+        return responseMessage;
+    }
+
+    public void putMemberOnHoldClaimCheck(final MemberMoveContext memberMoveContext, final MemberHoldVO memberHoldVO, final MemberMoveDetail memberMoveDetail, final SubsAffiliationVO subsAffiliationVO) {
+        if (memberMoveContext.isFailure()) {
+            logMessage(LOGGER, memberMoveContext, memberMoveDetail, "Skipping member for hold due to previous failure", null);
+            return;
+        }
+        // Check if member is already on hold
+        boolean isMemberOnHold = memberHold.isMemberOnHold(subsAffiliationVO.getMemberID());
+        if (isMemberOnHold) {
+            logMessage(LOGGER, memberMoveContext, memberMoveDetail, "Member is already on hold, skipping hold action", null);
+            return;
+        }
+
+//        MemberMergeSubmitService mergeSubmitService = new MemberMergeSubmitServiceImpl();
+//        MemberSubmitRequestDto memberSubmitRequestDto = new MemberSubmitRequestDto();
+//        memberSubmitRequestDto.setMemberID(subsAffiliationVO.getMemberID());
+//        MemberSubmitResponse response = mergeSubmitService.getClaims(memberSubmitRequestDto, null);
+//        List<ResponseMessage> messages = response.getMessages();
+        com.optum.cirrus.member.core.data.membermerge.MemberSubmitRequestDto memberSubmitRequestDto = new com.optum.cirrus.member.core.data.membermerge.MemberSubmitRequestDto();
+        memberSubmitRequestDto.setMemberID(subsAffiliationVO.getMemberID());
+        HttpEntity<com.optum.cirrus.member.core.data.membermerge.MemberSubmitRequestDto> memberSubmitRequestDtoHttpEntity = new HttpEntity<>(memberSubmitRequestDto, null);
+        com.optum.cirrus.member.core.data.membermerge.MemberSubmitResponse memberSubmitResponse = null;
+        String url = UriComponentsBuilder.fromHttpUrl(baseUrl)
+                .path("/membermerge/submit")
+                .toUriString();
+        try {
+            memberSubmitResponse = restTemplate.postForObject(url, memberSubmitRequestDtoHttpEntity, com.optum.cirrus.member.core.data.membermerge.MemberSubmitResponse.class);
+        } catch (RestClientException rce) {
+
+        }
+
+//        Date holdStartDate = UhgCalendarUtilities.getTodaysDate();
+        Date holdEndDate = UhgCalendarUtilities.getTodaysDate();
+
+        if (memberSubmitResponse != null && memberSubmitResponse.getMessages() != null && memberSubmitResponse.getMessages().size() > 0) {
+            logMessage(LOGGER, memberMoveContext, memberMoveDetail, "Putting member on MBRDUP hold", null);
+
+
+            memberHoldVO.setMemberID(subsAffiliationVO.getMemberID());
+            memberHoldVO.setMemGroupID(subsAffiliationVO.getMemGroupID());
+            memberHoldVO.setHoldCode(HoldCode.MEMBER_DUPLICATE_HOLD);
+//            memberHoldVO.setEffectiveDate(holdStartDate);
+            memberHoldVO.setShortNote("Member Merge Utility: Member placed on hold due to Claims still associated to the source member record stopping the member merge from processing. Once claims have been moved to the target member record remaining in Cirrus, then hold will be removed and release indicator will be selected.");
+
+            try {
+                memberHold.add(memberHoldVO);
+                logMessage(LOGGER, memberMoveContext, memberMoveDetail, "Member placed on hold", null);
+            } catch (Exception ex) {
+                logException(LOGGER, memberMoveContext, memberMoveDetail, ex, "Failed to put member on hold", null);
+                ValueObject errorVO = convertExceptionToValueObject(ex);
+                memberEnrollmentProcessorHelper.addErrorMessagesFromValueObjectToCirrusResponse(memberMoveDetail.getCirrusResponse(), errorVO);
+                memberEnrollmentProcessorHelper.addWarningMessagesFromValueObjectToCirrusResponse(memberMoveDetail.getCirrusResponse(), errorVO);
+                memberMoveContext.setFailure(true);
+            }
+        } else {
+            logMessage(LOGGER, memberMoveContext, memberMoveDetail, "No claims found, removing MBRDUP hold", null);
+            memberHoldVO.setHoldReleaseInd(true);
+            memberHold.update(memberHoldVO);
+            memberHoldVO.setExpirationDate(holdEndDate);
+        }
+    }
+}
